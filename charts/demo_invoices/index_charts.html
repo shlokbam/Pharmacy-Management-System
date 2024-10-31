@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Total Sales Chart</title>
+    
+    <!-- Load Google Charts library -->
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    
+    <!-- Load jQuery (for AJAX) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+            text-align: center;
+        }
+
+        #chart_div {
+            width: 90%;
+            max-width: 900px;
+            height: 600px;
+            margin: 20px 0;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            background-color: #fff; /* White background for the chart */
+            transition: transform 0.3s, background 0.3s;
+        }
+
+        #chart_div:hover {
+            transform: scale(1.02);
+            background: #f0f0f0;
+        }
+
+        #salesStats {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+            margin-bottom: 20px;
+            transition: transform 0.3s, background 0.3s;
+        }
+
+        #salesStats:hover {
+            transform: scale(1.02);
+            background: #f0f0f0;
+        }
+
+        .stat {
+            margin: 10px 0;
+            font-size: 20px;
+            color: #4CAF50; /* Green color for statistics */
+            font-weight: bold;
+        }
+
+        /* Download Button Styles */
+        #downloadBtn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        /* Responsive design */
+        @media (max-width: 600px) {
+            #chart_div {
+                height: 300px; /* Reduce height for smaller screens */
+            }
+        }
+    </style>
+
+    <script type="text/javascript">
+        // Load the Visualization API and the corechart package.
+        google.charts.load('current', {'packages':['corechart']});
+
+        // Set a callback to run when the Google Visualization API is loaded.
+        google.charts.setOnLoadCallback(drawChart);
+
+        let chart; // Declare chart variable globally
+
+        function drawChart() {
+        // Create the data table.
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Date'); // X-axis: Date
+        data.addColumn('number', 'Total Sales'); // Y-axis: Sales
+
+        // Fetch data from server using AJAX
+        function fetchData() {
+            $.ajax({
+                url: 'fetch_data.php', // PHP file that returns the data as JSON
+                dataType: 'json',
+                success: function(response) {
+                    // Clear previous rows
+                    data.removeRows(0, data.getNumberOfRows());
+
+                    // Add new rows from the fetched data
+                    response.salesData.forEach(function(row) {
+                        data.addRow([row[0], row[1]]);
+                    });
+
+                    // Set chart options
+                    var options = {
+                        title: 'Total Sales per Date',
+                        hAxis: {title: 'Invoice Date'}, // X-axis title
+                        vAxis: {title: 'Total Sales', minValue: 0}, // Y-axis title
+                        legend: 'none',
+                        colors: ['#4CAF50'], // Green color for the line
+                        backgroundColor: { fill: 'transparent' }, // Transparent background
+                        fontSize: 14,
+                        titleTextStyle: { fontSize: 20, color: '#333' },
+                        curveType: 'function', // Smooth lines
+                    };
+
+                    // Instantiate and draw our chart
+                    chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+                    chart.draw(data, options);
+
+                    // Display sales statistics
+                    document.getElementById('salesStats').innerHTML = `
+                        <div class="stat"><strong>Highest Sales:</strong> ₹ ${response.highestSales.toFixed(2)}</div>
+                        <div class="stat"><strong>Lowest Sales:</strong> ₹ ${response.lowestSales.toFixed(2)}</div>
+                        <div class="stat"><strong>Average Sales:</strong> ₹ ${response.averageSales.toFixed(2)}</div>
+                    `;
+                }
+            });
+    }
+
+    // Fetch data and update chart every 5 seconds
+    fetchData();
+    setInterval(fetchData, 5000); // Reload every 5000ms (5 seconds)
+}
+
+
+            // Fetch data and update chart every 5 seconds
+            fetchData();
+            setInterval(fetchData, 5000); // Reload every 5000ms (5 seconds)
+        
+
+        function downloadChart() {
+            // Get the chart image URI
+            const imgURI = chart.getImageURI();
+            // Create a temporary link element
+            const link = document.createElement('a');
+            link.href = imgURI; // Set link to image URI
+            link.download = 'chart.png'; // Set filename for download
+            document.body.appendChild(link); // Append link to the body
+            link.click(); // Simulate click on link to download
+            document.body.removeChild(link); // Remove link from body
+        }
+
+        // Send the image via email
+        document.getElementById('sendEmailBtn').addEventListener('click', function() {
+        alert('Manually run the Python script after downloading the image to send the email.');
+    });
+    </script>
+
+<script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+</head>
+<body>
+
+<h1>Monthly Sales Overview</h1>
+
+<!-- Sales statistics container -->
+<div id="salesStats"></div>
+
+<!-- Chart container -->
+<div id="chart_div"></div>
+
+<!-- Add a Download Button -->
+<button id="downloadBtn" onclick="downloadChart()">
+    Download Chart
+</button>
+
+
+<div id="email-button-container"></div>
+
+<!-- Add a script tag for the React component -->
+<script type="text/babel">
+function EmailButton() {
+  const [isSending, setIsSending] = React.useState(false);
+
+  const sendEmail = () => {
+    setIsSending(true);
+    const imgURI = chart.getImageURI();
+    
+    fetch('save_image.php', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ image: imgURI }),
+    })
+    .then(response => response.text())
+    .then(data => {
+      console.log(data);
+      alert('Email sent successfully!');
+      setIsSending(false);
+    })
+    .catch((error) => {
+      console.error('Error:', error);
+      alert('Failed to send email. Please try again.');
+      setIsSending(false);
+    });
+  };
+
+  return (
+    <button 
+      onClick={sendEmail} 
+      disabled={isSending}
+      style={{
+        marginTop: '20px',
+        padding: '10px 20px',
+        backgroundColor: '#4CAF50',
+        color: 'white',
+        border: 'none',
+        borderRadius: '5px',
+        fontSize: '16px',
+        cursor: isSending ? 'not-allowed' : 'pointer',
+        opacity: isSending ? 0.7 : 1,
+      }}
+    >
+      {isSending ? 'Sending...' : 'Send Email'}
+    </button>
+  );
+}
+
+ReactDOM.render(<EmailButton />, document.getElementById('email-button-container'));
+</script>
+
+
+</body>
+</html>

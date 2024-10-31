@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top Customers by Total Price</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(to right, #e0eafc, #cfdef3);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h2 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        #chart_div {
+            width: 90%;
+            max-width: 900px;
+            height: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s;
+        }
+
+        #top_customer_statements {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s, background 0.3s;
+        }
+
+        #top_customer_statements:hover {
+            transform: scale(1.02);
+            background: #f0f0f0;
+        }
+
+        .customer-icon {
+            width: 30px;
+            vertical-align: middle;
+            margin-right: 10px;
+        }
+
+        #chart_div:hover {
+            transform: scale(1.02);
+        }
+
+        @media only screen and (max-width: 600px) {
+            #chart_div {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h2>Top Customers by Total Price</h2>
+    <div id="chart_div"></div>
+
+    <div id="email-button-container"></div>
+
+    <script type="text/javascript">
+        google.charts.load('current', {'packages':['corechart']});
+        google.charts.setOnLoadCallback(drawChart);
+
+        function drawChart() {
+            fetch('get_customer_data.php')
+                .then(response => response.json())
+                .then(data => {
+                    var chartData = data.chartData;
+                    var topCustomer = data.topCustomer;
+
+                    let topCustomerStatement = '';
+                    if (topCustomer) {
+                        topCustomerStatement = `
+                            <p>
+                                <img src="https://png.pngtree.com/png-vector/20190301/ourlarge/pngtree-vector-growth-icon-png-image_747115.jpg" class="customer-icon" style="width: 40px; height: auto;"> 
+                                The top customer is <strong style="color: #1E90FF;">${topCustomer[0]}</strong> with a total spend of <strong style="color: #FF6347;">₹${topCustomer[1].toFixed(2)}</strong>.
+                            </p>`;
+                    } else {
+                        topCustomerStatement = '<p>No customer data available.</p>';
+                    }
+
+                    document.getElementById('top_customer_statements').innerHTML = topCustomerStatement;
+
+                    var dataTable = google.visualization.arrayToDataTable(chartData);
+
+                    var options = {
+                        title: 'Top Customers by Total Price',
+                        hAxis: {
+                            title: 'Customer ID',
+                            textStyle: { fontSize: 12, color: '#555' },
+                            titleTextStyle: { fontSize: 16, color: '#333', bold: true }
+                        },
+                        vAxis: {
+                            title: 'Total Price ($)',
+                            textStyle: { fontSize: 12, color: '#555' },
+                            titleTextStyle: { fontSize: 16, color: '#333', bold: true }
+                        },
+                        chartArea: { width: '75%', height: '70%' },
+                        colors: ['#1E90FF', '#FF6347'],
+                        legend: { position: 'top', alignment: 'end' },
+                        animation: {
+                            startup: true,
+                            duration: 500,
+                            easing: 'out',
+                        },
+                        tooltip: {
+                            isHtml: true,
+                            trigger: 'focus',
+                        },
+                        bar: { groupWidth: '75%' },
+                        backgroundColor: {
+                            fill: '#f4f4f9',
+                            stroke: '#ccc',
+                            strokeWidth: 2
+                        }
+                    };
+
+                    var chart = new google.visualization.ColumnChart(document.getElementById('chart_div'));
+                    chart.draw(dataTable, options);
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        }
+
+        window.addEventListener('resize', drawChart);
+    </script>
+
+    <div id="top_customer_statements"></div>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script type="text/babel">
+function EmailButton() {
+  const [isSending, setIsSending] = React.useState(false);
+  const [status, setStatus] = React.useState('');
+
+  const sendEmail = () => {
+    setIsSending(true);
+    setStatus('Preparing to send email...');
+
+    // Capture the chart as an image
+    html2canvas(document.getElementById('chart_div')).then(canvas => {
+      const imgData = canvas.toDataURL('image/png');
+
+      // Send the image data to the server
+      fetch('save_image.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ image: imgData }),
+      })
+      .then(response => response.text())
+      .then(data => {
+        console.log('Server response:', data);
+        if (data.includes('Email sent successfully')) {
+          setStatus('Email sent successfully! Please check your inbox and spam folder.');
+        } else {
+          setStatus('Error sending email. Check server logs for details.');
+        }
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+        setStatus('Failed to send email. Please check console for errors.');
+      })
+      .finally(() => {
+        setIsSending(false);
+      });
+    });
+  };
+
+  return (
+    <div style={{ marginTop: '20px', textAlign: 'center' }}>
+      <button 
+        onClick={sendEmail} 
+        disabled={isSending}
+        style={{
+          padding: '10px 20px',
+          backgroundColor: '#4CAF50',
+          color: 'white',
+          border: 'none',
+          borderRadius: '5px',
+          fontSize: '16px',
+          cursor: isSending ? 'not-allowed' : 'pointer',
+          opacity: isSending ? 0.7 : 1,
+        }}
+      >
+        {isSending ? 'Sending...' : 'Send Sales Report Email'}
+      </button>
+      {status && <p style={{ marginTop: '10px', color: status.includes('Error') ? 'red' : 'green' }}>{status}</p>}
+    </div>
+  );
+}
+
+        ReactDOM.render(<EmailButton />, document.getElementById('email-button-container'));
+    </script>
+</body>
+</html>
