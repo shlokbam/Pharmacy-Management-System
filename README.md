@@ -74,13 +74,6 @@ Features
 *   User-Friendly UI: Clean and intuitive layout, designed with user experience in mind.
     
 
-Screenshots
------------
-
-Landing Page of the Application (images/screenshot1.png)
-
-Sample Interaction within the Application (images/screenshot2.png)
-
 License
 -------
 
