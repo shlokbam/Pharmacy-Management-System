@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medicines List</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Medicines</h1>
+    <ul id="medicines-list"></ul>
+
+    <script>
+        $(document).ready(function() {
+            $.ajax({
+                url: "https://your-api-endpoint.com/medicines", // Replace with your API endpoint
+                method: "GET",
+                headers: {
+                    "x-rapidapi-key": "fb0a5fe36fmshe73347564896d4dp189934jsn2867e42dd8d5",
+                    "x-rapidapi-host": "your-api-host.com" // Replace with your API host
+                },
+                success: function(data) {
+                    if (Array.isArray(data) && data.length > 0) {
+                        data.forEach(function(medicine) {
+                            $('#medicines-list').append('<li>' + medicine.name + ' - ' + medicine.quantity + '</li>');
+                        });
+                    } else {
+                        $('#medicines-list').append('<li>No medicines found.</li>');
+                    }
+                },
+                error: function(err) {
+                    console.error(err);
+                    $('#medicines-list').append('<li>Error retrieving medicines.</li>');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
