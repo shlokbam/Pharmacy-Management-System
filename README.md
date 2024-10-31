@@ -47,7 +47,7 @@ Installation
 
 To run this project locally, follow these steps:
 
-1.  Clone the repository:git clone [https://github.com/yourusername/your-repo-name.git](https://github.com/yourusername/your-repo-name.git)
+1.  Clone the repository:git clone [https://github.com/yourusername/your-repo-name.git](https://github.com/shlokbam/pharmacymanagmentsystem.git)
     
 2.  Open the project folder:cd your-repo-name
     
